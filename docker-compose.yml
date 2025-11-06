@@ -1,0 +1,35 @@
+services:
+  user-service:
+    build:
+      context: ./services/user-service  # Path folder
+    container_name: user_service
+    ports:
+      - "3000:3000"  # Take 3000 port
+    environment:
+      # Set here the db settings
+      DB_HOST: user_db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: password123
+      DB_NAME: users
+      JWT_SECRET: "IL_TUO_SEGRETO_JWT_SUPER_SICURO" #Remember to change
+    depends_on:
+      - user_db 
+    volumes:
+      - ./services/user-service:/usr/src/app
+      - /usr/src/app/node_modules
+      
+  user_db:
+    image: postgres:15-alpine # use postgres
+    container_name: user_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: users
+    ports:
+      - "5432:5432" # Expose port 5432
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data # 
+
+volumes:
+  postgres_user_data: 

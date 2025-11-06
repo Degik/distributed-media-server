@@ -1,0 +1,78 @@
+// Definisce la versione della sintassi di protobuf
+syntax = "proto3";
+
+// Definisce uno "spazio dei nomi" per evitare conflitti
+package scanner;
+
+// ---------------------------------
+// IL SERVIZIO PRINCIPALE (L'API)
+// ---------------------------------
+// 'ScannerService' è il nome del tuo "servizio"
+// che l'Agente C++ implementerà.
+service ScannerService {
+
+  // Task 1: Scansiona un percorso
+  // Il Cervello (Node.js) chiama questa funzione sull'Agente (C++).
+  // Invia un 'ScanRequest' e si aspetta di ricevere uno 'ScanResponse'.
+  rpc ScanPath (ScanRequest) returns (ScanResponse) {}
+
+  // Task 2: Chiedi lo stato del nodo (Heartbeat/Health Check)
+  // Il Cervello può chiamare questa funzione per chiedere all'Agente
+  // "Come stai? Quanto spazio hai su disco?".
+  // Invia una richiesta vuota e riceve uno 'StatusResponse'.
+  rpc GetNodeStatus (Empty) returns (NodeStatusResponse) {}
+}
+
+// ---------------------------------
+// MESSAGGI (I Dati)
+// ---------------------------------
+
+// Definisce un messaggio vuoto (utile per richieste senza parametri)
+message Empty {}
+
+// --- Messaggi per ScanPath ---
+
+message ScanRequest {
+  // Il percorso assoluto che l'Agente C++ deve scansionare
+  // Es. "/mnt/nas/movies" o "D:\Movies"
+  string path_to_scan = 1;
+
+  // (Opzionale) Possiamo aggiungere filtri, es. "scansiona solo .mkv"
+  // repeated string extensions_filter = 2;
+}
+
+message ScanResponse {
+  // L'Agente (C++) risponde con un elenco di 'MediaFile' trovati.
+  // 'repeated' significa che è una lista/array (0 o più file).
+  repeated MediaFile files_found = 1;
+}
+
+// 'MediaFile' definisce la struttura di un singolo file trovato.
+// L'Agente C++ è responsabile di raccogliere queste info.
+message MediaFile {
+  string file_path = 1;      // Percorso completo, es. "/mnt/nas/movies/Avatar.mkv"
+  int64 file_size_bytes = 2; // Dimensione in byte (int64 per file grandi)
+  string last_modified = 3;  // Data/ora ultima modifica (in formato ISO 8601)
+  
+  // (Opzionale) Potremmo già far calcolare un hash veloce all'Agente
+  // string quick_hash = 4; 
+}
+
+
+// --- Messaggi per GetNodeStatus ---
+
+message NodeStatusResponse {
+  string node_id = 1;           // Un nome/ID unico per il nodo, es. "Nodo-B"
+  bool is_scanning = 2;         // Flag: "Sto già scansionando?"
+  double cpu_load_percent = 3;  // Carico CPU attuale
+  double mem_available_gb = 4;  // Memoria disponibile
+  
+  // Un elenco dei dischi che questo nodo sta gestendo
+  repeated DiskInfo disks = 5; 
+}
+
+message DiskInfo {
+  string mount_point = 1; // Es. "/mnt/nas"
+  double total_gb = 2;
+  double free_gb = 3;
+}

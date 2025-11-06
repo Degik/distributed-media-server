@@ -24,10 +24,10 @@ services:
   # This service manages the library of media content across different platforms.
   library-service:
     build:
-      context: ./services/library-service #
+      context: ./services/library-service 
     container_name: library_service
     ports:
-      - "3001:3000" # 
+      - "3001:3000"
     environment:
       DB_HOST: library_db
       DB_PORT: 5432
@@ -35,13 +35,23 @@ services:
       DB_PASSWORD: password123
       DB_NAME: libraries
       JWT_SECRET: "IL_TUO_SEGRETO_JWT_SUPER_SICURO" #
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq" #
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq" 
+      CONSUL_URL: "http://consul:8500" #
     depends_on:
       - library_db
-      - rabbitmq # 
+      - rabbitmq
+      #- consul #
     volumes:
       - ./services/library-service:/usr/src/app
       - /usr/src/app/node_modules
+      #- ./proto:/usr/src/app/proto
+  # 
+  consul_service:
+    image: consul:1.18
+    container_name: consul_server
+    ports:
+      - "8500:8500" # Interfaccia Web/API di Consul
+    command: "agent -server -bootstrap-expect=1 -ui -client=0.0.0.0"
   # Library Database Service
   # This service handles library data storage and retrieval.
   library_db:

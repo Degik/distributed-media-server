@@ -1,4 +1,6 @@
 services:
+  # User Service
+  # This service manages user registration, authentication, and profiles. 
   user-service:
     build:
       context: ./services/user-service  # Path folder
@@ -18,7 +20,43 @@ services:
     volumes:
       - ./services/user-service:/usr/src/app
       - /usr/src/app/node_modules
-      
+  # Library Service
+  # This service manages the library of media content across different platforms.
+  library-service:
+    build:
+      context: ./services/library-service #
+    container_name: library_service
+    ports:
+      - "3001:3000" # 
+    environment:
+      DB_HOST: library_db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: password123
+      DB_NAME: libraries
+      JWT_SECRET: "IL_TUO_SEGRETO_JWT_SUPER_SICURO" #
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq" #
+    depends_on:
+      - library_db
+      - rabbitmq # 
+    volumes:
+      - ./services/library-service:/usr/src/app
+      - /usr/src/app/node_modules
+  # Library Database Service
+  # This service handles library data storage and retrieval.
+  library_db:
+    image: postgres:15-alpine
+    container_name: library_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: libraries
+    ports:
+      - "5433:5432" # 
+    volumes:
+      - postgres_library_data:/var/lib/postgresql/data  
+  # User Database Service
+  # This service handles user data storage and retrieval.
   user_db:
     image: postgres:15-alpine # use postgres
     container_name: user_db
@@ -30,6 +68,15 @@ services:
       - "5432:5432" # Expose port 5432
     volumes:
       - postgres_user_data:/var/lib/postgresql/data # 
+  # RabbitMQ Service
+  # This service provides messaging capabilities for inter-service communication.
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # 
+      - "15672:15672"
 
 volumes:
-  postgres_user_data: 
+  postgres_user_data:
+  postgres_library_data:
